@@ -1,0 +1,6 @@
+target/
+.classpath
+.project
+*.class
+lucene/
+top-query/
