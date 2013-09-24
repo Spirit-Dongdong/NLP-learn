@@ -62,11 +62,13 @@ public class QuerySpellCheck {
         throws IOException, ClassNotFoundException, ParseException {
 
         init();
-//    	buildIndex();
+    	buildIndex();
     	
         // read compiled model from model file
 //        System.out.println("Reading model from file=" + MODEL_FILE);
         CompiledSpellChecker compiledSC = readModel(MODEL_FILE);
+        
+        System.out.println("token size:" + compiledSC.tokenSet().size());
 
         compiledSC.setTokenizerFactory(tokenizerFactory);
         IndexReader reader = IndexReader.open(fsDir);
