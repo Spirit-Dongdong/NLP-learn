@@ -1,9 +1,12 @@
 package dongdong;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.StringReader;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -11,7 +14,6 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.IntField;
@@ -19,12 +21,18 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.aliasi.lm.NGramProcessLM;
+import com.aliasi.spell.FixedWeightEditDistance;
+import com.aliasi.spell.TrainSpellChecker;
+import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
+import com.aliasi.tokenizer.LowerCaseTokenizerFactory;
+import com.aliasi.tokenizer.TokenizerFactory;
+
+import dongdong.util.AnalyzerUtil;
 import dongdong.util.PinYinUtil;
-import dongdong.util.TxtUtil;
 
 
 
@@ -32,8 +40,34 @@ public class BuildIndex {
 
 	public static final String INDEX_PATH = "top-query";
 	public static final String CORPUS = "e:\\top-query.txt";
+	public static final File MODEL_FILE = new File("didUMean.model");
 	
-	private static Analyzer analyzer = new IKAnalyzer(true);
+    static final double MATCH_WEIGHT = -0.0;
+    static final double DELETE_WEIGHT = -4.0;
+    static final double INSERT_WEIGHT = -1.0;
+    static final double SUBSTITUTE_WEIGHT = -2.0;
+    static final double TRANSPOSE_WEIGHT = -2.0;
+    
+    public static FixedWeightEditDistance fixedEdit;
+	
+	public static NGramProcessLM lm;
+	public static TokenizerFactory tokenizerFactory;
+	public static TrainSpellChecker tsc;
+	
+	private static Analyzer analyzer;
+	
+	
+	public static void init() {
+		analyzer = new IKAnalyzer();
+		lm = new NGramProcessLM(3);
+		fixedEdit = new FixedWeightEditDistance(MATCH_WEIGHT, DELETE_WEIGHT, 
+				INSERT_WEIGHT, SUBSTITUTE_WEIGHT, TRANSPOSE_WEIGHT);
+		tokenizerFactory = MyTokenizerFactory.INSTANCE;
+		tsc = 
+				new TrainSpellChecker(lm,fixedEdit,tokenizerFactory);
+	}
+	
+	
 	
 	public static void buildIndex() throws IOException {
 		long start = System.currentTimeMillis();
@@ -59,23 +93,46 @@ public class BuildIndex {
 				CharTermAttribute attribute = ts.getAttribute(CharTermAttribute.class);
 				String term = attribute.toString();
 				String pinyin = PinYinUtil.getHanyuPinyin(term);
-				System.out.println(pinyin);
 				pinyinSb.append(pinyin).append(" ");
 			}
 			document.add(new Field("pinyin", pinyinSb.toString(), Store.YES, Index.ANALYZED));
+			tsc.handle(content);
+			tsc.handle(pinyinSb);
+			
 			writer.addDocument(document);
 		}
 		writer.commit();
 		
 		writer.close();
 		long end = System.currentTimeMillis();
-		System.out.println("use " + (end - start) + "ms");
+		System.out.println("index use " + (end - start) + "ms");
 	}
 	
-	
+	public static void writeModel() throws IOException {
+		long start = System.currentTimeMillis();
+		FileOutputStream fileOut = new FileOutputStream(MODEL_FILE);
+        BufferedOutputStream bufOut = new BufferedOutputStream(fileOut);
+        ObjectOutputStream objOut = new ObjectOutputStream(bufOut);
+
+        // write the spell checker to the file
+        tsc.compileTo(objOut);
+        
+        objOut.close();
+        bufOut.close();
+        fileOut.close();
+		long end = System.currentTimeMillis();
+		System.out.println("write Model use " + (end - start) + "ms");
+	}
 	
 	public static void main(String[] args) throws IOException {
+		long start, end;
+		start = System.currentTimeMillis();
+		init();
+		end = System.currentTimeMillis();
+		System.out.println("init cost " + (end - start) + "ms");
+		
 		buildIndex();
+		writeModel();
 	}
 
 }

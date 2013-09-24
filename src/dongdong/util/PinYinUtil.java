@@ -603,29 +603,7 @@ public class PinYinUtil {
 		return true;
 	}
 	
-	public static String getKeywordByPinyin(String pinyin) {
-		String result = null;
-		try {
-			IndexReader reader = IndexReader.open(FSDirectory.open(
-					new File(BuildIndex.INDEX_PATH)));
-			IndexSearcher searcher = new IndexSearcher(reader);
-			Query query = new TermQuery(new Term("pinyin", pinyin));
-			TopDocs docs = searcher.search(query, 1);
-			if (docs.totalHits > 0) {
-				Document doc = reader.document(docs.scoreDocs[0].doc);
-				result = doc.get("keyword");
-				return result;
-			} else {
-				return null;
-			}
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
+	
 
 	public static void main(String[] args) {
 		String str = "长春市长java";
