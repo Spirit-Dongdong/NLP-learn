@@ -16,13 +16,13 @@ public class MyTokenizerFactory implements TokenizerFactory {
 	public Tokenizer tokenizer(char[] ch, int start, int length) {
 		// TODO Auto-generated method stub
 		String input = new String(ch, start, length);
-		Tokenizer tokenizer = new MyTokenizer(input, false);
+		Tokenizer tokenizer = new MyTokenizer(input, true);
 		return tokenizer;
 	}
 
 	public static void main(String[] args) {
 		TokenizerFactory mTokenizerFactory = MyTokenizerFactory.INSTANCE;
-		CharSequence cSeq = "会计";
+		CharSequence cSeq = "北京盘古投资有限公司";
         char[] cs = Strings.toCharArray(cSeq);
         Tokenizer tokenizer = mTokenizerFactory.tokenizer(cs,0,cs.length);
         String nextToken;

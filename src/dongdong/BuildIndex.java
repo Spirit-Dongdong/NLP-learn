@@ -43,9 +43,9 @@ public class BuildIndex {
 	public static final File MODEL_FILE = new File("didUMean.model");
 	
     static final double MATCH_WEIGHT = -0.0;
-    static final double DELETE_WEIGHT = -4.0;
+    static final double DELETE_WEIGHT = -1.0;
     static final double INSERT_WEIGHT = -1.0;
-    static final double SUBSTITUTE_WEIGHT = -2.0;
+    static final double SUBSTITUTE_WEIGHT = -1.0;
     static final double TRANSPOSE_WEIGHT = -2.0;
     
     public static FixedWeightEditDistance fixedEdit;
@@ -60,7 +60,7 @@ public class BuildIndex {
 	
 	
 	public static void init() {
-		analyzer = new IKAnalyzer();
+		analyzer = new IKAnalyzer(true);
 		lm = new NGramProcessLM(MAX_NGRAM);
 		fixedEdit = new FixedWeightEditDistance(MATCH_WEIGHT, DELETE_WEIGHT, 
 				INSERT_WEIGHT, SUBSTITUTE_WEIGHT, TRANSPOSE_WEIGHT);

@@ -150,6 +150,8 @@ public class DidUMeanTest {
 				// end = System.currentTimeMillis();
 				// System.out.println("chinese, direct didUmean, result is "
 				// + result + " cost " + (end - start) + "ms");
+				
+				
 				return result;
 			}
 
@@ -167,7 +169,7 @@ public class DidUMeanTest {
 				Document doc = reader.document(docs.scoreDocs[0].doc);
 				result = doc.get("keyword");
 				// end = System.currentTimeMillis();
-				// System.out.println("getKeywordByPinyin cost " + (end - start)
+//				 System.out.println("getKeywordByPinyin cost " + (end - start)
 				// + "ms");
 				return result;
 			} else {
@@ -202,7 +204,7 @@ public class DidUMeanTest {
 	}
 
 	private static void warmUp() throws IOException {
-		didUMean("test");
+		didUMean("gongis");
 		getKeywordByPinyin("gongcheng");
 	}
 
@@ -226,7 +228,9 @@ public class DidUMeanTest {
 		end = System.currentTimeMillis();
 		System.out.println("read model cost " + (end - start) + "ms");
 
-		String[] tests = { "gognsi", "gongs", "工司", "gongsii", "工程司" };
+		String[] tests = {"北京盘古投资有限公司", "gognsi", "gongs", "工司", "gongsii", "工程司", 
+				 ""};
+		System.out.println("-----------------------------------------");
 		for (String t : tests) {
 			start = System.currentTimeMillis();
 			String result = didUMean(t, true);

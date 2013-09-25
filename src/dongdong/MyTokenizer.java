@@ -34,7 +34,7 @@ public class MyTokenizer extends Tokenizer {
 
 	public MyTokenizer(String input, boolean useSmart) {
 		try {
-			analyzer = new IKAnalyzer();
+			analyzer = new IKAnalyzer(useSmart);
 			ts = analyzer.tokenStream(null, new StringReader(input));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
