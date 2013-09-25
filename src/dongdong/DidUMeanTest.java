@@ -58,57 +58,107 @@ public class DidUMeanTest {
 
 	public static String didUMean(String keyword) throws IOException {
 		String result = null;
-//		long start = System.currentTimeMillis();
-//		long end;
 
 		Query query = new TermQuery(new Term("keyword", keyword));
 
 		TopDocs docs = searcher.search(query, null, 1);
 		if (docs.totalHits < THRESHOLD) {
 			// TODO: invoke "did u mean?"
-//			System.out.println(keyword + " not find in keyword, enter didUMean");
+			// System.out.println(keyword +
+			// " not find in keyword, enter didUMean");
 			if (CharUtil.allAscChar(keyword)) {// 不含中文
 				// try to find both in keyword & pinyin
 				String maybeChn = getKeywordByPinyin(keyword);
 				if (maybeChn != null) {
-//					System.out.println("get keyword by pinyin success");
+					// System.out.println("get keyword by pinyin success");
 					return maybeChn;
 				}
-//				start = System.currentTimeMillis();
+				// start = System.currentTimeMillis();
 				String bestFit = sc.didYouMean(keyword);
-//				end = System.currentTimeMillis();
-//				System.out.println("didYouMean cost " + (end - start) + "ms");
+				// end = System.currentTimeMillis();
+				// System.out.println("didYouMean cost " + (end - start) +
+				// "ms");
 
 				if ((result = getKeywordByPinyin(bestFit)) != null) {
-//					System.out.println("find by didUMean & pinyin");
+					// System.out.println("find by didUMean & pinyin");
 					return result;
 				}
 				return bestFit;
 
 			} else {// has chinese chars, only find in keyword
 				String pinyin = PinYinUtil.getHanyuPinyin(keyword);
-//				System.out.println("chinese, pinyin is " + pinyin);
+				// System.out.println("chinese, pinyin is " + pinyin);
 				result = getKeywordByPinyin(pinyin);
 				if (result != null) {
-//					System.out.println("chinese, find by pinyin, result is " + result);
+					// System.out.println("chinese, find by pinyin, result is "
+					// + result);
 					return result;
 				} else {
-//					start = System.currentTimeMillis();
+					// start = System.currentTimeMillis();
 					result = sc.didYouMean(keyword);
-//					end = System.currentTimeMillis();
-//					System.out.println("chinese, direct didUmean, result is "
-//							+ result + " cost " + (end - start) + "ms");
+					// end = System.currentTimeMillis();
+					// System.out.println("chinese, direct didUmean, result is "
+					// + result + " cost " + (end - start) + "ms");
 					return result;
 				}
-				
+
 			}
 		}
 		return result;
 	}
 
+	public static String didUMean(String keyword, boolean direct)
+			throws IOException {
+
+		String result = null;
+		// long start = System.currentTimeMillis();
+		// long end;
+
+		if (!direct) {
+			return didUMean(keyword);
+		}
+
+		if (CharUtil.allAscChar(keyword)) {// 不含中文
+			// try to find both in keyword & pinyin
+			String maybeChn = getKeywordByPinyin(keyword);
+			if (maybeChn != null) {
+				// System.out.println("get keyword by pinyin success");
+				return maybeChn;
+			}
+			// start = System.currentTimeMillis();
+			String bestFit = sc.didYouMean(keyword);
+			// end = System.currentTimeMillis();
+			// System.out.println("didYouMean cost " + (end - start) + "ms");
+
+			if ((result = getKeywordByPinyin(bestFit)) != null) {
+				// System.out.println("find by didUMean & pinyin");
+				return result;
+			}
+			return bestFit;
+
+		} else {// has chinese chars
+			String pinyin = PinYinUtil.getHanyuPinyin(keyword);
+			// System.out.println("chinese, pinyin is " + pinyin);
+			result = getKeywordByPinyin(pinyin);
+			if (result != null) {
+				// System.out.println("chinese, find by pinyin, result is " +
+				// result);
+				return result;
+			} else {
+				// start = System.currentTimeMillis();
+				result = sc.didYouMean(keyword);
+				// end = System.currentTimeMillis();
+				// System.out.println("chinese, direct didUmean, result is "
+				// + result + " cost " + (end - start) + "ms");
+				return result;
+			}
+
+		}
+	}
+
 	public static String getKeywordByPinyin(String pinyin) {
-//		long start = System.currentTimeMillis();
-//		long end;
+		// long start = System.currentTimeMillis();
+		// long end;
 		String result = null;
 		try {
 			Query query = new TermQuery(new Term("pinyin", pinyin));
@@ -116,12 +166,14 @@ public class DidUMeanTest {
 			if (docs.totalHits > 0) {
 				Document doc = reader.document(docs.scoreDocs[0].doc);
 				result = doc.get("keyword");
-//				end = System.currentTimeMillis();
-//				System.out.println("getKeywordByPinyin cost " + (end - start) + "ms");
+				// end = System.currentTimeMillis();
+				// System.out.println("getKeywordByPinyin cost " + (end - start)
+				// + "ms");
 				return result;
 			} else {
-//				end = System.currentTimeMillis();
-//				System.out.println("not find, getKeywordByPinyin cost " + (end - start) + "ms");
+				// end = System.currentTimeMillis();
+				// System.out.println("not find, getKeywordByPinyin cost " +
+				// (end - start) + "ms");
 				return null;
 			}
 
@@ -148,7 +200,7 @@ public class DidUMeanTest {
 		bufIn.close();
 		objIn.close();
 	}
-	
+
 	private static void warmUp() throws IOException {
 		didUMean("test");
 		getKeywordByPinyin("gongcheng");
@@ -177,7 +229,7 @@ public class DidUMeanTest {
 		String[] tests = { "gognsi", "gongs", "工司", "gongsii", "工程司" };
 		for (String t : tests) {
 			start = System.currentTimeMillis();
-			String result = didUMean(t);
+			String result = didUMean(t, true);
 			end = System.currentTimeMillis();
 			System.out.println("cost " + (end - start) + "ms");
 			if (result != null) {
