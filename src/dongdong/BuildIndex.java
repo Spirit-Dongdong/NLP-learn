@@ -54,17 +54,18 @@ public class BuildIndex {
 	public static TokenizerFactory tokenizerFactory;
 	public static TrainSpellChecker tsc;
 	
+	public static final int MAX_NGRAM = 3;
+	
 	private static Analyzer analyzer;
 	
 	
 	public static void init() {
 		analyzer = new IKAnalyzer();
-		lm = new NGramProcessLM(3);
+		lm = new NGramProcessLM(MAX_NGRAM);
 		fixedEdit = new FixedWeightEditDistance(MATCH_WEIGHT, DELETE_WEIGHT, 
 				INSERT_WEIGHT, SUBSTITUTE_WEIGHT, TRANSPOSE_WEIGHT);
 		tokenizerFactory = MyTokenizerFactory.INSTANCE;
-		tsc = 
-				new TrainSpellChecker(lm,fixedEdit,tokenizerFactory);
+		tsc = new TrainSpellChecker(lm,fixedEdit,tokenizerFactory);
 	}
 	
 	
