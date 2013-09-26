@@ -77,6 +77,9 @@ public class BoundedPriorityQueue<E>
     implements Queue<E>,
                SortedSet<E> {
 
+	/*
+	 * BoundedPriorityQueue是一个限定元素个数的大顶堆
+	 */
     final SortedSet<Entry<E>> mQueue;
     private int mMaxSize;
     private final Comparator<? super E> mComparator;
@@ -143,7 +146,7 @@ public class BoundedPriorityQueue<E>
     public boolean offer(E o) {
         if (size() < mMaxSize)
             return mQueue.add(new Entry<E>(o));
-        Entry<E> last = mQueue.last();
+        Entry<E> last = mQueue.last();//last是最小的元素
         E lastObj = last.mObject;
         if (mComparator.compare(o,lastObj) <= 0)
             return false; // worst element better
@@ -452,7 +455,7 @@ public class BoundedPriorityQueue<E>
         return new QueueIterator<E>(mQueue.iterator());
     }
 
-    private class EntryComparator implements Comparator<Entry<E>> {
+    private class EntryComparator implements Comparator<Entry<E>> {//这个Comparator设置了整个堆是大顶堆
         public int compare(Entry<E> entry1, Entry<E> entry2) {
             // reverse normal so largest is "first"
             E eObj1 = entry1.mObject;

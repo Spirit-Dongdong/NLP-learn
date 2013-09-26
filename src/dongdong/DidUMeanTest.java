@@ -204,7 +204,7 @@ public class DidUMeanTest {
 	}
 
 	private static void warmUp() throws IOException {
-		didUMean("gongis");
+		didUMean("北京盘古投资有限公司");
 		getKeywordByPinyin("gongcheng");
 	}
 

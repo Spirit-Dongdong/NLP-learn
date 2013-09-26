@@ -798,7 +798,7 @@ public class CompiledSpellChecker implements SpellChecker {
         State initialState = new State(0.0,false,mTokenPrefixTrie,
                                        null,
                                        mLM.nextContext(0,' '));
-        addToQueue(queue,initialState,editPenalties[0]);
+        addToQueue(queue,initialState,editPenalties[0]);//queue是一个大小为64的大顶堆，第一个元素是空
         DpSpellQueue nextQ = new DpSpellQueue();
         DpSpellQueue nextQ2 = new DpSpellQueue();
         for (int i = 0; i < msg.length(); ++i) {
@@ -1341,7 +1341,7 @@ public class CompiledSpellChecker implements SpellChecker {
             if (mIsToken) sb.append(" [token=" + prefix + "]");
             sb.append('\n');
             for (int i = 0; i < mFollowingChars.length; ++i) {
-                for (int k = 0; k < indent; ++k) sb.append("  ");
+                for (int k = 0; k < indent; ++k) sb.append("  ");//按照层次设置输出格式
                 sb.append(mFollowingChars[i]);
                 mFollowingNodes[i].toString(prefix+mFollowingChars[i],
                                             sb,indent+1);
@@ -1443,7 +1443,8 @@ public class CompiledSpellChecker implements SpellChecker {
             StringBuilder sb = new StringBuilder();
             for (State s = this; s != null; s = s.mPreviousState)
                 s.outputLocal(sb);
-            // reverse
+            // reverse 
+            //这里为什么要倒序
             int len = sb.length();
             char[] cs = new char[len];
             for (int i = 0; i < len; ++i)
@@ -1463,7 +1464,7 @@ public class CompiledSpellChecker implements SpellChecker {
             State bestState = mStateToBest.get(dp);
             if (bestState == null) {
                 mStateToBest.put(dp,state);
-                return offer(state);
+                return offer(state);//把state加到队列中
             }
             if (bestState.mScore >= state.mScore)
                 return false;
@@ -1471,6 +1472,7 @@ public class CompiledSpellChecker implements SpellChecker {
             mStateToBest.put(dp,state);
             return offer(state);
         }
+
     }
 
     private final class NBestSpellQueue extends StateQueue {
