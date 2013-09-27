@@ -791,6 +791,25 @@ public class CompiledSpellChecker implements SpellChecker {
         //System.out.println("Winner is: "+bestState);
         return bestState.output().trim();
     }
+    
+    
+    /*
+     * return : String[0]是最优提示，String[1]是该提示的分数 
+     */
+    public String[] didYouMean2(String receivedMsg) {
+        String msg = normalizeQuery(receivedMsg);
+        if (msg.length() == 0) return null;
+        DpSpellQueue queue = new DpSpellQueue();
+        DpSpellQueue finalQueue = new DpSpellQueue();
+        computeBestPaths(msg,queue,finalQueue);
+        if (finalQueue.isEmpty())
+            return null;
+        State bestState = finalQueue.poll();
+        //System.out.println("Winner is: "+bestState);
+//        return bestState.output().trim();
+        String score = String.valueOf(bestState.mScore);
+        return new String[]{bestState.output().trim(), score};
+    }
 
     void computeBestPaths(String msg,
                           StateQueue queue, StateQueue finalQueue) {
