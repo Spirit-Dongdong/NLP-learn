@@ -45,7 +45,7 @@ public class BuildIndex {
     static final double MATCH_WEIGHT = -0.0;
     static final double DELETE_WEIGHT = -1.0;
     static final double INSERT_WEIGHT = -1.0;
-    static final double SUBSTITUTE_WEIGHT = -1.0;
+    static final double SUBSTITUTE_WEIGHT = -4.0;
     static final double TRANSPOSE_WEIGHT = -2.0;
     
     public static FixedWeightEditDistance fixedEdit;

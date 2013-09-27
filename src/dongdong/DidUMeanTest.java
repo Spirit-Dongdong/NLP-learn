@@ -23,6 +23,7 @@ import com.aliasi.util.Streams;
 
 import dongdong.util.CharUtil;
 import dongdong.util.PinYinUtil;
+import dongdong.util.TxtUtil;
 
 public class DidUMeanTest {
 
@@ -31,6 +32,21 @@ public class DidUMeanTest {
 
 	private static IndexReader reader;
 	private static IndexSearcher searcher;
+	
+	private static final String BOT_QUERY = "botQuery.txt"; 
+	private static final String RESULT = "result";
+	
+	private static final float PY_SCORE = 0.9f;
+	
+	/**
+	 * 1: 输入为全英文，直接通过拼音找到汉字，返回汉字，得分为0.9
+	 * 2： 输入为全英文，通过拼音找不到汉字，进入计算模块，再把得到结果转换成汉字返回.得分为模块得分*0.9
+	 * 3：输入有汉字，把汉字转换成拼音，再把拼音转成汉字返回。得分为0.9。适用同音字输错
+	 * 4.输入有汉字，转成拼音后找不到对应汉字，直接通过汉字进入计算模块。得分为模块得分
+	 * 
+	 * 5.待添加。输入为全英文，通过拼音找不到汉字，直接进入计算模块返回结果。适用于objectvie c这种输入
+	 */
+	private static int type;
 
 	private static void initReaderSearcher() {
 		if (reader == null) {
@@ -74,7 +90,10 @@ public class DidUMeanTest {
 					return maybeChn;
 				}
 				// start = System.currentTimeMillis();
-				String bestFit = sc.didYouMean(keyword);
+//				String bestFit = sc.didYouMean(keyword);
+				String[] results = sc.didYouMean2(keyword);
+				String bestFit = results[0];
+				
 				// end = System.currentTimeMillis();
 				// System.out.println("didYouMean cost " + (end - start) +
 				// "ms");
@@ -107,32 +126,35 @@ public class DidUMeanTest {
 		return result;
 	}
 
-	public static String didUMean(String keyword, boolean direct)
+	public static String[] didUMean(String keyword, boolean direct)
 			throws IOException {
 
 		String result = null;
 		// long start = System.currentTimeMillis();
 		// long end;
 
-		if (!direct) {
-			return didUMean(keyword);
-		}
+//		if (!direct) {
+//			return didUMean(keyword);
+//		}
 
 		if (CharUtil.allAscChar(keyword)) {// 不含中文
 			// try to find both in keyword & pinyin
 			String maybeChn = getKeywordByPinyin(keyword);
 			if (maybeChn != null) {
-				// System.out.println("get keyword by pinyin success");
-				return maybeChn;
+				type = 1;
+				return new String[]{maybeChn, String.valueOf(PY_SCORE)};//type = 1,直接从拼音获得
 			}
 			// start = System.currentTimeMillis();
-			String bestFit = sc.didYouMean(keyword);
+			String[] bestFit = sc.didYouMean2(keyword);
 			// end = System.currentTimeMillis();
 			// System.out.println("didYouMean cost " + (end - start) + "ms");
 
-			if ((result = getKeywordByPinyin(bestFit)) != null) {
+			if ((result = getKeywordByPinyin(bestFit[0])) != null) {
 				// System.out.println("find by didUMean & pinyin");
-				return result;
+//				return result;
+				double score = PY_SCORE * Double.parseDouble(bestFit[1]);
+				type = 2;
+				return new String[]{result, String.valueOf(score)};//type=2，纠正拼音，通过拼音拿到汉字
 			}
 			return bestFit;
 
@@ -143,24 +165,25 @@ public class DidUMeanTest {
 			if (result != null) {
 				// System.out.println("chinese, find by pinyin, result is " +
 				// result);
-				return result;
+				type = 3;
+				return new String[]{result, String.valueOf(PY_SCORE)};//type=3，通过汉字转拼音，再转汉字拿到
 			} else {
 				// start = System.currentTimeMillis();
-				result = sc.didYouMean(keyword);
+//				result = sc.didYouMean2(keyword);
 				// end = System.currentTimeMillis();
 				// System.out.println("chinese, direct didUmean, result is "
 				// + result + " cost " + (end - start) + "ms");
 				
 				
-				return result;
+//				return result;
+				type = 4;
+				return sc.didYouMean2(keyword);//tpye=4，汉字去计算拿到
 			}
 
 		}
 	}
 
 	public static String getKeywordByPinyin(String pinyin) {
-		// long start = System.currentTimeMillis();
-		// long end;
 		String result = null;
 		try {
 			Query query = new TermQuery(new Term("pinyin", pinyin));
@@ -190,12 +213,10 @@ public class DidUMeanTest {
 	private static void readModel(File file) throws ClassNotFoundException,
 			IOException {
 
-		// create object input stream from file
 		FileInputStream fileIn = new FileInputStream(file);
 		BufferedInputStream bufIn = new BufferedInputStream(fileIn);
 		ObjectInputStream objIn = new ObjectInputStream(bufIn);
 
-		// read the spell checker
 		sc = (CompiledSpellChecker) objIn.readObject();
 
 		fileIn.close();
@@ -216,6 +237,11 @@ public class DidUMeanTest {
 		warmUp();
 		end = System.currentTimeMillis();
 		System.out.println("init cost " + (end - start) + "ms");
+		
+		long totalCost = 0;
+		int count = 0;
+		StringBuilder sb = new StringBuilder();
+		
 
 		start = System.currentTimeMillis();
 		try {
@@ -228,21 +254,43 @@ public class DidUMeanTest {
 		end = System.currentTimeMillis();
 		System.out.println("read model cost " + (end - start) + "ms");
 
-		String[] tests = {"北京盘古投资有限公司", "gognsi", "gongs", "工司", "gongsii", "工程司", 
-				 ""};
-		System.out.println("-----------------------------------------");
-		for (String t : tests) {
+//		String[] tests = {"北京盘古投资有限公司", "gognsi", "gongs", "工司", "gongsii", "工程司", 
+//				 ""};
+		
+		String[] queries = TxtUtil.getFileContent(BOT_QUERY).split("\n");
+		
+		
+//		System.out.println("-----------------------------------------");
+		for (String t : queries) {
+			count ++;
+			String query = t.split(":")[0];
 			start = System.currentTimeMillis();
-			String result = didUMean(t, true);
+			String[] result = didUMean(query, true);
 			end = System.currentTimeMillis();
-			System.out.println("cost " + (end - start) + "ms");
+			long cost = end - start;
+			totalCost += cost;
+//			System.out.println("cost " + cost + "ms");
+			sb.append("cost " + cost + "ms\n");
 			if (result != null) {
-				System.out.println("did u mean " + result + " instead of " + t);
+//				System.out.println("did u mean " + result + " instead of " + t);
+//				TxtUtil.writeToFile(RESULT, result[1] + " did u mean " + result[0] + " instead of " + query, true);
+				sb.append(type + "_" + result[1] + " did u mean " + result[0] + " instead of " + query + "\n" +
+						"------------------------------\n");
 			}
 
-			System.out.println("-----------------------------------------");
-
+//			System.out.println("-----------------------------------------");
+//			TxtUtil.writeToFile(RESULT, "----------------------------", true);
+			
+			if (count % 1000 == 0) {
+				System.out.println(count + " completed");
+				TxtUtil.writeToFile(RESULT, sb.toString(), true);
+				sb = new StringBuilder();
+			}
+			
 		}
+		
+//		System.err.println("total cost:" + totalCost + ", avg cost " + totalCost/queries.length);
+		TxtUtil.writeToFile(RESULT, "total cost:" + totalCost + ", avg cost " + totalCost/count, true);
 	}
 
 }
