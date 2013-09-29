@@ -278,8 +278,8 @@ public class DidUMeanTest {
 		end = System.currentTimeMillis();
 		System.out.println("read model cost " + (end - start) + "ms");
 
-		// simpleTest();
-		test();
+		 simpleTest();
+//		test();
 	}
 
 	public static void test() throws IOException {
@@ -289,8 +289,8 @@ public class DidUMeanTest {
 		int realCount = 0;
 		int count = 0;
 		StringBuilder sb = new StringBuilder();
-		String[] queries = TxtUtil.getFileContent(BOT_QUERY).split("\n");
-//		String[] queries = {"wlgcs"};
+//		String[] queries = TxtUtil.getFileContent(BOT_QUERY).split("\n");
+		String[] queries = {"sougo","sougou"};
 
 		for (String t : queries) {
 			count++;
@@ -325,8 +325,9 @@ public class DidUMeanTest {
 		long start, end;
 		start = System.currentTimeMillis();
 
-		String[] tests = { "excl", "北京盘古氏投资有限公司", "gognsi", "jaav", "工司",
-				"gongsii", "工程司" };
+//		String[] tests = { "excl", "北京盘古氏投资有限公司", "gognsi", "jaav", "工司",
+//				"gongsii", "工程司" };
+		String[] tests = {"sougo","sougou"};
 		for (String t : tests) {
 			String query = t.split(":")[0];
 			start = System.currentTimeMillis();

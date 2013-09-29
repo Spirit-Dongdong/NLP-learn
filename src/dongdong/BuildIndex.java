@@ -44,7 +44,7 @@ public class BuildIndex {
 	public static final File MODEL_FILE = new File("didUMean.model");
 	
     static final double MATCH_WEIGHT = 3.0;
-    static final double DELETE_WEIGHT = -3.0;
+    static final double DELETE_WEIGHT = -2.0;
     static final double INSERT_WEIGHT = -1.0;
     static final double SUBSTITUTE_WEIGHT = -4.0;
     static final double TRANSPOSE_WEIGHT = -1.0;
