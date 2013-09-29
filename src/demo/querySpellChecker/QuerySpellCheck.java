@@ -95,7 +95,7 @@ public class QuerySpellCheck {
         Streams.closeQuietly(fileOut);
     }
 
-    private static CompiledSpellChecker readModel(File file)
+    public static CompiledSpellChecker readModel(File file)
         throws ClassNotFoundException, IOException {
 
         // create object input stream from file
