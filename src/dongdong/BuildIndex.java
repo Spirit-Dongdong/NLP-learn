@@ -11,6 +11,7 @@ import java.io.StringReader;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -42,11 +43,11 @@ public class BuildIndex {
 	public static final String CORPUS = "e:\\top-query.txt";
 	public static final File MODEL_FILE = new File("didUMean.model");
 	
-    static final double MATCH_WEIGHT = -0.0;
-    static final double DELETE_WEIGHT = -1.0;
+    static final double MATCH_WEIGHT = 3.0;
+    static final double DELETE_WEIGHT = -3.0;
     static final double INSERT_WEIGHT = -1.0;
     static final double SUBSTITUTE_WEIGHT = -4.0;
-    static final double TRANSPOSE_WEIGHT = -2.0;
+    static final double TRANSPOSE_WEIGHT = -1.0;
     
     public static FixedWeightEditDistance fixedEdit;
 	
@@ -57,10 +58,16 @@ public class BuildIndex {
 	public static final int MAX_NGRAM = 3;
 	
 	private static Analyzer analyzer;
+	private static IKAnalyzer smartAnalyzer;
 	
 	
 	public static void init() {
-		analyzer = new IKAnalyzer(true);
+		analyzer = new IKAnalyzer(false);
+		smartAnalyzer = new IKAnalyzer(true);
+//		IKAnalyzer keyAnalyzer1 = new IKAnalyzer(useSmart);
+		
+		
+		
 		lm = new NGramProcessLM(MAX_NGRAM);
 		fixedEdit = new FixedWeightEditDistance(MATCH_WEIGHT, DELETE_WEIGHT, 
 				INSERT_WEIGHT, SUBSTITUTE_WEIGHT, TRANSPOSE_WEIGHT);
@@ -73,6 +80,7 @@ public class BuildIndex {
 	public static void buildIndex() throws IOException {
 		long start = System.currentTimeMillis();
 		IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_40, analyzer);
+//		PerFieldAnalyzerWrapper wrapper = new PerFieldAnalyzerWrapper(analyzer, fieldAnalyzers);
 		config.setOpenMode(OpenMode.CREATE);
 		IndexWriter writer = new IndexWriter(FSDirectory.open(new File(INDEX_PATH)), config);
 		
@@ -88,7 +96,7 @@ public class BuildIndex {
 			
 			document.add(new Field("keyword", content, Store.YES, Index.ANALYZED));
 			StringBuilder pinyinSb = new StringBuilder();
-			ts = analyzer.tokenStream("", new StringReader(pair[0]));
+			ts = smartAnalyzer.tokenStream("", new StringReader(pair[0]));
 			ts.reset();
 			while (ts.incrementToken()) {
 				CharTermAttribute attribute = ts.getAttribute(CharTermAttribute.class);
@@ -96,7 +104,11 @@ public class BuildIndex {
 				String pinyin = PinYinUtil.getHanyuPinyin(term);
 				pinyinSb.append(pinyin).append(" ");
 			}
-			document.add(new Field("pinyin", pinyinSb.toString(), Store.YES, Index.ANALYZED));
+			if (pinyinSb.length() > 0) {
+				pinyinSb.deleteCharAt(pinyinSb.length() - 1);
+			}
+//			System.out.println(pinyinSb);
+			document.add(new Field("pinyin", pinyinSb.toString(), Store.YES, Index.NOT_ANALYZED));
 			tsc.handle(content);
 			tsc.handle(pinyinSb);
 			
