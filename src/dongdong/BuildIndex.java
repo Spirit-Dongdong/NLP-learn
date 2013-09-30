@@ -41,7 +41,7 @@ public class BuildIndex {
 
 	public static final String INDEX_PATH = "top-query";
 	public static final String CORPUS = "e:\\top-query.txt";
-	public static final File MODEL_FILE = new File("didUMean.model");
+	public static final File MODEL_FILE = new File("resource/didUMean.model");
 	
     static final double MATCH_WEIGHT = 3.0;
     static final double DELETE_WEIGHT = -2.0;
