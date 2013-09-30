@@ -193,37 +193,37 @@ public class QuerySpellCheck {
     }
     
     private static void buildIndex() throws IOException {
-    	
-        
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_40, ANALYZER);
-        IndexWriter luceneIndexWriter 
-            = new IndexWriter(fsDir, config);
-
-        if (!DATA.isDirectory()) {
-            System.out.println("Could not find training directory=" + DATA);
-            System.out.println("Have you unpacked the data?");
-        }
+//    	
+//        
+//        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_40, ANALYZER);
+//        IndexWriter luceneIndexWriter 
+//            = new IndexWriter(fsDir, config);
+//
+//        if (!DATA.isDirectory()) {
+//            System.out.println("Could not find training directory=" + DATA);
+//            System.out.println("Have you unpacked the data?");
+//        }
         String[] filesToIndex = DATA.list();
         for (int i = 0; i < filesToIndex.length; ++i) {
             System.out.println("     File=" + DATA+"/"+filesToIndex[i]);
             String charSequence
                 = Files.readFromFile(new File(DATA,filesToIndex[i]),"ISO-8859-1");
             sc.handle(charSequence);
-            Document luceneDoc = new Document();
-            Field textField
-                = new Field(TEXT_FIELD,
-                            charSequence,
-                            Field.Store.YES,
-                            Field.Index.ANALYZED);
-            luceneDoc.add(textField);
-            luceneIndexWriter.addDocument(luceneDoc);
+//            Document luceneDoc = new Document();
+//            Field textField
+//                = new Field(TEXT_FIELD,
+//                            charSequence,
+//                            Field.Store.YES,
+//                            Field.Index.ANALYZED);
+//            luceneDoc.add(textField);
+//            luceneIndexWriter.addDocument(luceneDoc);
         }
 
         System.out.println("Writing model to file=" + MODEL_FILE);
         writeModel(sc,MODEL_FILE);
 
-        System.out.println("Writing lucene index to =" + LUCENE_INDEX_DIR);
-        luceneIndexWriter.close();
+//        System.out.println("Writing lucene index to =" + LUCENE_INDEX_DIR);
+//        luceneIndexWriter.close();
 
     }
 

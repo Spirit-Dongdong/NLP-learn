@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -26,6 +28,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.aliasi.spell.CompiledSpellChecker;
+import com.aliasi.util.ScoredObject;
 import com.aliasi.util.Streams;
 
 import dongdong.util.CharUtil;
@@ -52,8 +55,8 @@ public class DidUMeanTest {
 
 	private static Analyzer analyzer = new IKAnalyzer(false);
 
-	private static final double MIN_SCORE_2 = -9;
-	private static final double MIN_SCORE_4 = -9;
+	private static final double MIN_SCORE_2 = -35;
+	private static final double MIN_SCORE_4 = -35;
 
 	/**
 	 * -1:return null
@@ -278,8 +281,9 @@ public class DidUMeanTest {
 		end = System.currentTimeMillis();
 		System.out.println("read model cost " + (end - start) + "ms");
 
-		 simpleTest();
+//		 simpleTest();
 //		test();
+		testBestNResult("sougo");
 	}
 
 	public static void test() throws IOException {
@@ -289,8 +293,8 @@ public class DidUMeanTest {
 		int realCount = 0;
 		int count = 0;
 		StringBuilder sb = new StringBuilder();
-//		String[] queries = TxtUtil.getFileContent(BOT_QUERY).split("\n");
-		String[] queries = {"sougo","sougou"};
+		String[] queries = TxtUtil.getFileContent(BOT_QUERY).split("\n");
+//		String[] queries = {"sougo","sougou"};
 
 		for (String t : queries) {
 			count++;
@@ -378,6 +382,11 @@ public class DidUMeanTest {
 			return false;
 		}
 		return true;
+	}
+	
+	public static void testBestNResult(String keyword) {
+		Iterator<ScoredObject<String>> results = sc.didYouMeanNBest(keyword);
+		System.out.println(results);
 	}
 
 }

@@ -40,11 +40,20 @@ public class SpellCheckerTest {
 		String o1 = "sou guo";
 		String o2 = "sougou";
 		
+//		input = "java";
+//		o1 = "jaav";
+		
 		init();
 		double d1 = wed.distance(input, o1);
 		double d2 = wed.distance(input, o2);
 		System.out.println(d1);
 		System.out.println(d2);
+		System.out.println(lm.log2Estimate(input));
+		System.out.println(lm.log2Estimate(o1));
+		System.out.println(lm.log2Estimate(o2));
+		
+		System.out.println(lm.log2Estimate("qrjamlvnpioh2"));
+		
 	}
 
 }
