@@ -1,4 +1,4 @@
-package dongdong;
+package dongdong.didUMean;
 
 import com.aliasi.tokenizer.Tokenizer;
 import com.aliasi.tokenizer.TokenizerFactory;

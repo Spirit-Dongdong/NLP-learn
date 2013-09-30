@@ -1,4 +1,4 @@
-package dongdong;
+package dongdong.didUMean;
 
 public class WeightEDTest {
 
