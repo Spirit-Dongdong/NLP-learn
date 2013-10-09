@@ -45,8 +45,12 @@ public class DidUMeanTest {
 
 	private static IndexReader archiveReader;
 	private static IndexSearcher archiveSearcher;
+	
+	private static IndexReader jobReader;
+	private static IndexSearcher jobSearcher;
 
 	private static final String ARCHIVE_INDEX = "D:\\archive_rebuild";
+	private static final String JOB_INDEX = "D:\\job_rebuild";
 
 	private static final String BOT_QUERY = "resource/botQuery.txt";
 	private static final String RESULT = "result";
@@ -55,8 +59,8 @@ public class DidUMeanTest {
 
 	private static Analyzer analyzer = new IKAnalyzer(false);
 
-	private static final double MIN_SCORE_2 = -10;
-	private static final double MIN_SCORE_4 = -12;
+	private static final double MIN_SCORE_2 = -8;
+	private static final double MIN_SCORE_4 = -10;
 	
 	private static final String SPECIAL_CHARS = "[,\\.\\+\\-!，。！]";
 
@@ -81,6 +85,10 @@ public class DidUMeanTest {
 				archiveReader = IndexReader.open(FSDirectory.open(new File(
 						ARCHIVE_INDEX)));
 				archiveSearcher = new IndexSearcher(archiveReader);
+				
+				jobReader = IndexReader.open(FSDirectory.open(new File(
+						JOB_INDEX)));
+				jobSearcher = new IndexSearcher(jobReader);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -158,25 +166,16 @@ public class DidUMeanTest {
 
 		String result = null;
 
-//		Query query = buildQuery(keyword);
-//		TopDocs docs = archiveSearcher.search(query, null, 1);
-//
-//		if (docs.totalHits > 0) {
-//			// System.out.println("不用提示" + keyword);
-//			type = -1;
-//			return null;
-//		}
-		
-		
+		if (!needCorrection(keyword)) {
+			return null;
+		}
 
 		if (CharUtil.allAscChar(keyword)) {// 不含中文
 			// try to find both in keyword & pinyin
 			String maybeChn = getKeywordByPinyin(keyword);
 			if (maybeChn != null) {
 				type = 1;
-				return new String[] { maybeChn, String.valueOf(PY_SCORE) };// type
-																			// =
-																			// 1,直接从拼音获得
+				return new String[] { maybeChn, String.valueOf(PY_SCORE) };// type=1,直接从拼音获得
 			}
 			String[] bestFit = sc.didYouMean2(keyword);
 			if (bestFit == null) {
@@ -265,8 +264,12 @@ public class DidUMeanTest {
 	}
 
 	private static void warmUp() throws IOException {
-		didUMean("北京盘古投资有限公司");
+//		didUMean("北京盘古投资有限公司");
 		getKeywordByPinyin("gongcheng");
+		String temp = "北京有限公司";
+		archiveSearcher.search(buildArchiveQuery(temp), 1);
+		jobSearcher.search(buildJobQuery(temp), 1);
+		
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -288,12 +291,15 @@ public class DidUMeanTest {
 		System.out.println("read model cost " + (end - start) + "ms");
 
 //		 simpleTest();
-//		test();
-//		testBestNResult("sougo");
+		test();
+//		testBestNResult("富佳");
 		 
-		String pinyin = "-danei";
-		System.out.println(getKeywordByPinyin(pinyin));
-		 
+//		String pinyin = "-danei";
+//		System.out.println(getKeywordByPinyin(pinyin));
+//		String[] tobeTest = {"富佳", ""}
+		
+		String aaa = "柒牌";
+		System.out.println(needCorrection(aaa));
 	}
 
 	public static void test() throws IOException {
@@ -373,18 +379,64 @@ public class DidUMeanTest {
 		}
 		return sb.toString();
 	}
+	
+	private static boolean needCorrection(String keyword) {
+		
+		TopDocs docs;
+		Query query = buildArchiveQuery(keyword);
+		try {
+			docs = archiveSearcher.search(query, null, 1);
+			if (docs.totalHits > 0) {
+				return false;
+			} else {
+				query = buildJobQuery(keyword);
+				docs = jobSearcher.search(query, null, 1);
+				if (docs.totalHits > 0) {
+					return false;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-	private static Query buildQuery(String keyword) {
+		return true;
+	}
+
+	private static Query buildArchiveQuery(String keyword) {
 		BooleanQuery query = new BooleanQuery();
-		TermQuery query1 = new TermQuery(new Term("name", keyword));
-		TermQuery query2 = new TermQuery(new Term("tag_name", keyword));
-		TermQuery query3 = new TermQuery(new Term("corp_name", keyword));
+		Query query1 = addQuery("name", keyword);
+		Query query2 = addQuery("tag_name", keyword);
+		Query query3 = addQuery("corp_name", keyword);
+
 		query.add(query1, Occur.SHOULD);
 		query.add(query2, Occur.SHOULD);
 		query.add(query3, Occur.SHOULD);
 
 		return query;
+	}
+	
+	private static Query addQuery(String field, String keyword) {
+		BooleanQuery query = new BooleanQuery();
+		String[] tokens = analyze(keyword).split(" ");
+		for (String token : tokens) {
+			TermQuery termQuery = new TermQuery(new Term(field, token));
+			query.add(termQuery, Occur.MUST);
+		}
+		return query;
+				
+	}
+	
+	private static Query buildJobQuery(String keyword) {
+		BooleanQuery query = new BooleanQuery();
+		Query query1 = addQuery("name", keyword);
+		Query query2 = addQuery("corpAlias", keyword);
+		Query query3 = addQuery("corpName", keyword);
 
+		query.add(query1, Occur.SHOULD);
+		query.add(query2, Occur.SHOULD);
+		query.add(query3, Occur.SHOULD);
+
+		return query;
 	}
 	
 	private static boolean validResult(String origin, String didUMean) {
@@ -422,6 +474,25 @@ public class DidUMeanTest {
 		}
 		return 0;
 	}
+	
+	public static String analyze(String line) {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            TokenStream stream = analyzer
+                    .tokenStream(null, new StringReader(line));
+            stream.reset();
+            CharTermAttribute term = (CharTermAttribute) stream
+                    .addAttribute(CharTermAttribute.class);
+            while (stream.incrementToken()) {
+                sb.append(term);
+                sb.append(" ");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
 	
 	public static void testBestNResult(String keyword) {
 		Iterator<ScoredObject<String>> results = sc.didYouMeanNBest(keyword);
