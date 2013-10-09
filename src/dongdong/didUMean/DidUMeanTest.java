@@ -48,15 +48,17 @@ public class DidUMeanTest {
 
 	private static final String ARCHIVE_INDEX = "D:\\archive_rebuild";
 
-	private static final String BOT_QUERY = "botQuery.txt";
+	private static final String BOT_QUERY = "resource/botQuery.txt";
 	private static final String RESULT = "result";
 
 	private static final float PY_SCORE = 1f;
 
 	private static Analyzer analyzer = new IKAnalyzer(false);
 
-	private static final double MIN_SCORE_2 = -35;
-	private static final double MIN_SCORE_4 = -35;
+	private static final double MIN_SCORE_2 = -10;
+	private static final double MIN_SCORE_4 = -12;
+	
+	private static final String SPECIAL_CHARS = "[,\\.\\+\\-!，。！]";
 
 	/**
 	 * -1:return null
@@ -164,6 +166,8 @@ public class DidUMeanTest {
 //			type = -1;
 //			return null;
 //		}
+		
+		
 
 		if (CharUtil.allAscChar(keyword)) {// 不含中文
 			// try to find both in keyword & pinyin
@@ -202,7 +206,8 @@ public class DidUMeanTest {
 			return bestFit;
 
 		} else {// has chinese chars
-			String pinyin = PinYinUtil.getHanyuPinyin(keyword);
+			String tmp = nomolizePinyin(keyword);
+			String pinyin = PinYinUtil.getHanyuPinyin(tmp);
 			result = getKeywordByPinyin(pinyin);
 			if (result != null) {
 				type = 3;
@@ -220,10 +225,11 @@ public class DidUMeanTest {
 		}
 	}
 
-	public static String getKeywordByPinyin(String pinyin) {
+	public static String getKeywordByPinyin(final String pinyin) {
+		String temp = nomolizePinyin(pinyin);
 		String result = null;
 		try {
-			Query query = new TermQuery(new Term("pinyin", pinyin));
+			Query query = new TermQuery(new Term("pinyin", temp));
 			TopDocs docs = pinyinSearcher.search(query, 1);
 			if (docs.totalHits > 0) {
 				Document doc = pinyinReader.document(docs.scoreDocs[0].doc);
@@ -283,7 +289,11 @@ public class DidUMeanTest {
 
 //		 simpleTest();
 //		test();
-		testBestNResult("sougo");
+//		testBestNResult("sougo");
+		 
+		String pinyin = "-danei";
+		System.out.println(getKeywordByPinyin(pinyin));
+		 
 	}
 
 	public static void test() throws IOException {
@@ -331,7 +341,7 @@ public class DidUMeanTest {
 
 //		String[] tests = { "excl", "北京盘古氏投资有限公司", "gognsi", "jaav", "工司",
 //				"gongsii", "工程司" };
-		String[] tests = {"sougo","sougou"};
+		String[] tests = {"-达内","sougou"};
 		for (String t : tests) {
 			String query = t.split(":")[0];
 			start = System.currentTimeMillis();
@@ -381,12 +391,44 @@ public class DidUMeanTest {
 		if (origin.trim().equals(didUMean.trim())) {
 			return false;
 		}
+		
+		if (CharUtil.isChinese(origin) && CharUtil.isChinese(didUMean)) {
+			for (int i = 0; i < origin.length(); i++) {
+				if (didUMean.indexOf((origin.charAt(i))) > -1) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
 		return true;
+		
+	}
+	
+	private static String nomolizePinyin(final String keyword) {
+			String result = keyword.replaceAll(SPECIAL_CHARS, "");
+			return result;
+	}
+	
+	private static int getSearchCount(String keyword) {
+		Query query = new TermQuery(new Term("", keyword));
+		TopDocs result;
+		try {
+			result = archiveSearcher.search(query, 1);
+			return result.totalHits;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
 	}
 	
 	public static void testBestNResult(String keyword) {
 		Iterator<ScoredObject<String>> results = sc.didYouMeanNBest(keyword);
-		System.out.println(results);
+		while (results.hasNext()) {
+			System.out.println(results.next());
+		}
+
 	}
 
 }
