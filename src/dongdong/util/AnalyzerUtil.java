@@ -1,6 +1,10 @@
 package dongdong.util;
 
+import java.io.IOException;
+import java.io.StringReader;
+
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 public class AnalyzerUtil {
@@ -15,5 +19,7 @@ public class AnalyzerUtil {
 			return noSmart;
 		}
 	}
+	
+
 
 }

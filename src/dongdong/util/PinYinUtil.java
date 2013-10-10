@@ -113,7 +113,7 @@ public class PinYinUtil {
 		pinyinMap.put("deng", getListFromString("澄清"));
 		pinyinMap.put("di", getListFromString("怎的 无的 有的 目的 标的 打的 的确 的当 的士 上地 大地 天地 提防 堤"));
 		pinyinMap.put("diao", getListFromString("调 蓝调 蓝调吧 调调 音调 论调 格调 调令 低调 笔调 基调 强调 声调 滥调 老调 色调 单调 腔调 跑调 曲调 步调 语调 主调 情调"));
-		pinyinMap.put("du", getListFromString("都 都会 国都 都城 古都 故都 大都 首都 成都 旧都 都市 龙都 鼎都 鹤都 鹏都 鸿都 麦度 度 态度 读书 法度 宽度 进度"));
+		pinyinMap.put("du", getListFromString("都 都会 国都 都城 古都 故都 大都 首都 成都 旧都 都市 龙都 鼎都 鹤都 鹏都 鸿都 红都 麦度 度 态度 读书 法度 宽度 进度"));
 		pinyinMap.put("dui", getListFromString("堆"));
 		pinyinMap.put("dou", getListFromString("全都 句读"));
 		pinyinMap.put("duo", getListFromString("测度 忖度 揣度 猜度 舵"));
