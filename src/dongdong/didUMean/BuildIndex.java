@@ -43,6 +43,8 @@ public class BuildIndex {
 	public static final String CORPUS = "e:\\top-query.txt";
 	public static final File MODEL_FILE = new File("resource/didUMean.model");
 	
+	public static final File CORP_FILE = new File("D:\\workspace\\db_related\\corpAndName.txt");
+	
     static final double MATCH_WEIGHT = 3.0;
     static final double DELETE_WEIGHT = -2.0;
     static final double INSERT_WEIGHT = -1.0;
@@ -119,6 +121,25 @@ public class BuildIndex {
 		writer.close();
 		long end = System.currentTimeMillis();
 		System.out.println("index use " + (end - start) + "ms");
+		
+		start = System.currentTimeMillis();
+		br = new BufferedReader(new FileReader(CORP_FILE));
+		while ((line = br.readLine()) != null) {
+//			System.out.println(line);
+			String[] pair = line.split(" ");
+			String corp_name = pair[0];
+			
+			if (pair.length > 1) {
+				String name = pair[1];
+				tsc.handle(name);
+			}
+			
+			tsc.handle(corp_name);
+			
+		
+		}
+		end = System.currentTimeMillis();
+		System.out.println("compile corpAndName use " + (end - start) + "ms");
 	}
 	
 	public static void writeModel() throws IOException {
