@@ -60,9 +60,9 @@ public class DidUMeanTest {
 	private static Analyzer analyzer = new IKAnalyzer(false);
 
 	private static final double MIN_SCORE_2 = -8;
-	private static final double MIN_SCORE_4 = -10;
+	private static final double MIN_SCORE_4 = -9.6;
 	
-	private static final String SPECIAL_CHARS = "[,\\.\\+\\-!，。！]";
+	private static final String SPECIAL_CHARS = "[,\\.\\-!]";
 
 	/**
 	 * -1:return null
@@ -165,10 +165,12 @@ public class DidUMeanTest {
 			throws IOException {
 
 		String result = null;
-
-		if (!needCorrection(keyword)) {
-			return null;
-		}
+//
+//		if (!needCorrection(keyword)) {
+//			return null;
+//		}
+		
+		nomolizeQuery(keyword);
 
 		if (CharUtil.allAscChar(keyword)) {// 不含中文
 			// try to find both in keyword & pinyin
@@ -445,6 +447,9 @@ public class DidUMeanTest {
 		}
 		
 		if (CharUtil.isChinese(origin) && CharUtil.isChinese(didUMean)) {
+			if ((double)didUMean.length() / origin.length() < 0.6) {
+				return false;
+			}
 			for (int i = 0; i < origin.length(); i++) {
 				if (didUMean.indexOf((origin.charAt(i))) > -1) {
 					return true;
@@ -500,6 +505,11 @@ public class DidUMeanTest {
 			System.out.println(results.next());
 		}
 
+	}
+	
+	public static void nomolizeQuery(String input) {
+		input = input.replaceAll("\\s+", " ");
+		input = input.replace("[、，。！？]", "");
 	}
 
 }
